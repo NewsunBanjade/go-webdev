@@ -2,23 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 )
-
-type Router struct {
-}
-
-func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/":
-		homeHandleFunc(w, r)
-	case "/contact":
-		contactHandleFunc(w, r)
-	default:
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, "Page Not Found")
-	}
-}
 
 func homeHandleFunc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -32,8 +18,12 @@ func contactHandleFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	var router Router
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
-	fmt.Println("Starting Server")
-	http.ListenAndServe(":3000", router)
+	r := chi.NewRouter()
+	r.Get("/", homeHandleFunc)
+	r.Get("/contact", contactHandleFunc)
+	r.NotFound(func(writer http.ResponseWriter, request *http.Request) {
+		http.Error(writer, "Requested Page is not in server", http.StatusNotFound)
+	})
+	fmt.Println("Starting Server at port 3000")
+	http.ListenAndServe(":3000", r)
 }
